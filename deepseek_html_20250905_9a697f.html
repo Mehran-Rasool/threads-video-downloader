@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threads Video Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            overflow-x: hidden;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            position: relative;
+            padding: 20px;
+        }
+
+        /* 3D Space Background with Stars */
+        .space {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(ellipse at center, #0a0e2a 0%, #000000 70%);
+        }
+
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle linear infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        .shooting-star {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0), white);
+            animation: shoot linear infinite;
+        }
+
+        @keyframes shoot {
+            0% { 
+                transform: translateX(-100px) translateY(0) rotate(45deg);
+                opacity: 0;
+            }
+            20% { opacity: 1; }
+            100% { 
+                transform: translateX(calc(100vw + 100px)) translateY(calc(100vh + 100px)) rotate(45deg);
+                opacity: 0;
+            }
+        }
+
+        /* Main Content */
+        .content {
+            text-align: center;
+            max-width: 800px;
+            padding: 2.5rem;
+            z-index: 10;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateZ(0); }
+            50% { transform: translateY(-10px) translateZ(0); }
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            text-shadow: 0 0 15px rgba(100, 149, 237, 0.8);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1.2rem;
+            background: linear-gradient(to right, #ffffff, #e2e6ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+            font-weight: 700;
+        }
+
+        .tagline {
+            margin-bottom: 2.5rem;
+            color: #ccd6f6;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        /* 3D Social Media Buttons */
+        .platform-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .platform-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            animation: rotate 10s linear infinite;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        .platform-btn-inner {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .platform-btn:hover {
+            animation: rotate 2s linear infinite;
+            transform: scale(1.15);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .facebook { background: linear-gradient(145deg, #3b5998, #4c70ba); }
+        .instagram { background: linear-gradient(145deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .snapchat { background: linear-gradient(145deg, #fffc00, #ffd600); color: #000 !important; }
+        .youtube { background: linear-gradient(145deg, #ff0000, #ff5a3a); }
+
+        /* Search Bar & Download Button */
+        .download-section {
+            margin: 2rem 0;
+            animation: float 6s ease-in-out infinite;
+            animation-delay: 0.5s;
+        }
+
+        .input-group {
+            display: flex;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border-radius: 50px;
+            overflow: hidden;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateZ(20px);
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 1.2rem 1.8rem;
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .url-input::placeholder {
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .download-btn {
+            padding: 1.2rem 2.2rem;
+            border: none;
+            background: linear-gradient(to right, #8a94a8, #c3c8d3);
+            color: #0f172a;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: linear-gradient(to right, #c3c8d3, #8a94a8);
+            letter-spacing: 1px;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: left;
+            margin-top: 2rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateZ(10px);
+            animation: float 6s ease-in-out infinite;
+            animation-delay: 1s;
+        }
+
+        .instructions h3 {
+            margin-bottom: 1rem;
+            color: #c3c8d3;
+        }
+
+        .instructions ol {
+            padding-left: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .instructions li {
+            margin-bottom: 0.5rem;
+            color: #e2e6ee;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .tagline {
+                font-size: 1.1rem;
+            }
+            
+            .platform-buttons {
+                gap: 1.5rem;
+            }
+            
+            .platform-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 1.8rem;
+            }
+            
+            .platform-btn-inner {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                border-radius: 15px;
+            }
+            
+            .url-input {
+                border-radius: 15px 15px 0 0;
+                padding: 1.2rem;
+            }
+            
+            .download-btn {
+                border-radius: 0 0 15px 15px;
+                padding: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .tagline {
+                font-size: 1rem;
+            }
+            
+            .platform-buttons {
+                gap: 1rem;
+            }
+            
+            .platform-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+            
+            .platform-btn-inner {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="space">
+        <div class="stars" id="stars"></div>
+    </div>
+    
+    <div class="content">
+        <div class="logo">
+            <i class="fas fa-download"></i>
+        </div>
+        
+        <h1>Threads Video Downloader</h1>
+        
+        <p class="tagline">Download high-quality videos from Threads and other social media platforms with our fast and easy-to-use tool</p>
+        
+        <div class="platform-buttons">
+            <div class="platform-btn facebook" onclick="window.open('https://facebook.com', '_blank')">
+                <div class="platform-btn-inner">
+                    <i class="fab fa-facebook-f"></i>
+                </div>
+            </div>
+            <div class="platform-btn instagram" onclick="window.open('https://instagram.com', '_blank')">
+                <div class="platform-btn-inner">
+                    <i class="fab fa-instagram"></i>
+                </div>
+            </div>
+            <div class="platform-btn snapchat" onclick="window.open('https://snapchat.com', '_blank')">
+                <div class="platform-btn-inner">
+                    <i class="fab fa-snapchat-ghost"></i>
+                </div>
+            </div>
+            <div class="platform-btn youtube" onclick="window.open('https://youtube.com', '_blank')">
+                <div class="platform-btn-inner">
+                    <i class="fab fa-youtube"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="download-section">
+            <div class="input-group">
+                <input type="text" class="url-input" placeholder="Paste Threads video link here...">
+                <button class="download-btn">Download</button>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to download Threads videos:</h3>
+            <ol>
+                <li>Open the Threads app and find the video you want to download</li>
+                <li>Tap the three dots (⋯) on the post and select "Copy Link"</li>
+                <li>Paste the link in the input field above</li>
+                <li>Click the Download button to save your video</li>
+            </ol>
+        </div>
+        
+        <div class="footer">
+            <p>© 2023 Threads Video Downloader | Fast, Free & Secure</p>
+            <p>Disclaimer: This tool is for personal use only. Please respect copyright laws.</p>
+        </div>
+    </div>
+
+    <script>
+        // Create stars for the background
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const starsCount = 400;
+            
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                // Random size between 1-3px
+                const size = Math.random() * 2 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                // Random position
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                
+                // Random animation duration between 2-5s
+                const duration = Math.random() * 3 + 2;
+                star.style.animationDuration = `${duration}s`;
+                
+                // Random animation delay
+                star.style.animationDelay = `${Math.random() * 5}s`;
+                
+                starsContainer.appendChild(star);
+            }
+            
+            // Create shooting stars
+            setInterval(() => {
+                const shootingStar = document.createElement('div');
+                shootingStar.classList.add('shooting-star');
+                
+                // Random position
+                const startY = Math.random() * 100;
+                shootingStar.style.top = `${startY}%`;
+                shootingStar.style.left = '0%';
+                
+                // Random width between 50-150px
+                const width = Math.random() * 100 + 50;
+                shootingStar.style.width = `${width}px`;
+                
+                // Random duration between 1-3s
+                const duration = Math.random() * 2 + 1;
+                shootingStar.style.animationDuration = `${duration}s`;
+                
+                starsContainer.appendChild(shootingStar);
+                
+                // Remove shooting star after animation completes
+                setTimeout(() => {
+                    shootingStar.remove();
+                }, duration * 1000);
+            }, 2000);
+        }
+        
+        // Handle download button click
+        function setupDownloadButton() {
+            const downloadBtn = document.querySelector('.download-btn');
+            const urlInput = document.querySelector('.url-input');
+            
+            downloadBtn.addEventListener('click', () => {
+                const url = urlInput.value.trim();
+                
+                if (!url) {
+                    alert('Please enter a valid Threads video URL');
+                    return;
+                }
+                
+                // Simulate download process
+                downloadBtn.textContent = 'Downloading...';
+                downloadBtn.disabled = true;
+                
+                setTimeout(() => {
+                    alert('Download complete! This is a frontend demo. In a real application, the video would now be downloaded.');
+                    downloadBtn.textContent = 'Download';
+                    downloadBtn.disabled = false;
+                    urlInput.value = '';
+                }, 2000);
+            });
+        }
+        
+        // Initialize everything when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            createStars();
+            setupDownloadButton();
+        });
+    </script>
+</body>
+</html>
